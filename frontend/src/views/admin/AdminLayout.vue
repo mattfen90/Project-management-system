@@ -14,6 +14,9 @@
         <router-link to="/admin/users" class="nav-item" @click="closeSidebar">
           Users
         </router-link>
+        <router-link to="/admin/clients" class="nav-item" @click="closeSidebar">
+          Clients
+        </router-link>
       </nav>
     </aside>
 
