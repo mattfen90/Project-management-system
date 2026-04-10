@@ -1,16 +1,12 @@
 <template>
-  <AdminLayout title="Edit User">
-    <template #actions>
-      <router-link to="/admin/users" class="btn btn-secondary">
-        Back to Users
-      </router-link>
-    </template>
-
+  <div class="page">
     <div class="page-intro">
       <p>Update user account details, role, and status.</p>
     </div>
 
-    <p v-if="loading" class="loading-text">Loading user...</p>
+    <div v-if="loading" class="loading-card">
+      Loading user...
+    </div>
 
     <UserForm
       v-else
@@ -24,14 +20,13 @@
       @submit="submitForm"
       @cancel="goBack"
     />
-  </AdminLayout>
+  </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAdminUsersStore } from '../../stores/adminUsers';
-import AdminLayout from '../../components/layout/AdminLayout.vue';
 import UserForm from '../../components/admin/UserForm.vue';
 
 const route = useRoute();
@@ -84,8 +79,8 @@ async function submitForm() {
       accountStatus: form.accountStatus,
     };
 
-    if (form.password?.trim()) {
-      payload.password = form.password;
+    if (form.password && form.password.trim()) {
+      payload.password = form.password.trim();
     }
 
     await store.updateUser(route.params.id, payload);
@@ -107,26 +102,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .page-intro {
-  margin-bottom: 20px;
-  color: #666;
+  color: #6b7280;
 }
 
-.loading-text {
-  color: #444;
-}
-
-.btn {
-  display: inline-block;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  text-decoration: none;
-  text-align: center;
-}
-
-.btn-secondary {
-  background: #eaeaea;
-  color: #222;
+.loading-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  color: #4b5563;
 }
 </style>

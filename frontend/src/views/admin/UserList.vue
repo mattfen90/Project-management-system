@@ -1,11 +1,5 @@
 <template>
-  <AdminLayout title="User Management">
-    <template #actions>
-      <router-link to="/admin/users/create" class="btn btn-primary">
-        Create User
-      </router-link>
-    </template>
-
+  <div class="page">
     <div class="page-intro">
       <p>Manage platform users, roles, and account statuses.</p>
     </div>
@@ -18,7 +12,7 @@
           v-model="filters.search"
           type="text"
           placeholder="Search by username or email"
-          @keyup.enter="loadUsers"
+          @keyup.enter="applyFilters"
         />
       </div>
 
@@ -26,7 +20,11 @@
         <label for="role">Role</label>
         <select id="role" v-model="filters.role">
           <option value="">All Roles</option>
-          <option v-for="role in store.roles" :key="role.UserRoleID" :value="role.UserRoleName">
+          <option
+            v-for="role in store.roles"
+            :key="role.UserRoleID"
+            :value="role.UserRoleName"
+          >
             {{ role.UserRoleName }}
           </option>
         </select>
@@ -44,15 +42,15 @@
       </div>
 
       <div class="filter-actions">
-        <button class="btn btn-primary" @click="loadUsers">Apply</button>
+        <button class="btn btn-primary" @click="applyFilters">Apply</button>
         <button class="btn btn-secondary" @click="resetFilters">Reset</button>
       </div>
     </div>
 
     <div class="card">
-      <p v-if="store.loading">Loading users...</p>
-      <p v-else-if="store.error" class="error">{{ store.error }}</p>
-      <p v-else-if="!store.users.length">No users found.</p>
+      <p v-if="store.loading" class="info-text">Loading users...</p>
+      <p v-else-if="store.error" class="error-text">{{ store.error }}</p>
+      <p v-else-if="!store.users.length" class="info-text">No users found.</p>
 
       <div v-else class="table-wrapper">
         <table>
@@ -65,7 +63,7 @@
               <th>Status</th>
               <th>Email Verified</th>
               <th>Last Login</th>
-              <th>Actions</th>
+              <th class="actions-column">Actions</th>
             </tr>
           </thead>
 
@@ -90,7 +88,10 @@
                   Edit
                 </router-link>
 
-                <button class="btn btn-small btn-danger" @click="removeUser(user)">
+                <button
+                  class="btn btn-small btn-danger"
+                  @click="removeUser(user)"
+                >
                   Delete
                 </button>
               </td>
@@ -108,7 +109,9 @@
           Previous
         </button>
 
-        <span>Page {{ store.page }}</span>
+        <span class="page-indicator">
+          Page {{ store.page }}
+        </span>
 
         <button
           class="btn btn-secondary"
@@ -119,13 +122,12 @@
         </button>
       </div>
     </div>
-  </AdminLayout>
+  </div>
 </template>
 
 <script setup>
 import { reactive, onMounted } from 'vue';
 import { useAdminUsersStore } from '../../stores/adminUsers';
-import AdminLayout from '../../components/layout/AdminLayout.vue';
 
 const store = useAdminUsersStore();
 
@@ -144,6 +146,11 @@ async function loadUsers() {
   });
 }
 
+async function applyFilters() {
+  store.page = 1;
+  await loadUsers();
+}
+
 async function changePage(page) {
   store.page = page;
   await loadUsers();
@@ -158,11 +165,19 @@ function resetFilters() {
 }
 
 async function removeUser(user) {
-  const confirmed = window.confirm(`Are you sure you want to delete user "${user.Username}"?`);
+  const confirmed = window.confirm(
+    `Are you sure you want to delete user "${user.Username}"?`
+  );
+
   if (!confirmed) return;
 
   try {
     await store.deleteUser(user.UserID);
+
+    if (store.users.length === 1 && store.page > 1) {
+      store.page -= 1;
+      await loadUsers();
+    }
   } catch (error) {
     alert(error?.response?.data?.message || 'Failed to delete user');
   }
@@ -193,17 +208,21 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .page-intro {
-  margin-bottom: 20px;
-  color: #666;
+  color: #6b7280;
 }
 
 .card {
   background: #fff;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 20px;
-  margin-bottom: 20px;
 }
 
 .filters {
@@ -218,6 +237,11 @@ onMounted(async () => {
   gap: 8px;
 }
 
+.filter-group label {
+  font-weight: 600;
+  color: #374151;
+}
+
 .filter-actions {
   display: flex;
   align-items: end;
@@ -227,8 +251,9 @@ onMounted(async () => {
 input,
 select {
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
+  background: #fff;
 }
 
 .table-wrapper {
@@ -244,12 +269,23 @@ th,
 td {
   text-align: left;
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+th {
+  color: #374151;
+  font-size: 14px;
+}
+
+.actions-column {
+  min-width: 140px;
 }
 
 .actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -260,11 +296,11 @@ td {
   cursor: pointer;
   text-decoration: none;
   text-align: center;
+  font-size: 14px;
 }
 
 .btn-small {
   padding: 8px 10px;
-  font-size: 14px;
 }
 
 .btn-primary {
@@ -273,12 +309,12 @@ td {
 }
 
 .btn-secondary {
-  background: #eaeaea;
-  color: #222;
+  background: #e5e7eb;
+  color: #111827;
 }
 
 .btn-danger {
-  background: #d93025;
+  background: #dc2626;
   color: white;
 }
 
@@ -291,23 +327,23 @@ td {
 }
 
 .badge-success {
-  background: #d1fadf;
-  color: #067647;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .badge-warning {
-  background: #fef0c7;
-  color: #b54708;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .badge-danger {
-  background: #fee4e2;
-  color: #b42318;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .badge-muted {
-  background: #f2f4f7;
-  color: #475467;
+  background: #f3f4f6;
+  color: #4b5563;
 }
 
 .pagination {
@@ -318,8 +354,17 @@ td {
   margin-top: 20px;
 }
 
-.error {
-  color: #b42318;
+.page-indicator {
+  color: #374151;
+  font-weight: 500;
+}
+
+.info-text {
+  color: #4b5563;
+}
+
+.error-text {
+  color: #b91c1c;
   font-weight: 600;
 }
 </style>

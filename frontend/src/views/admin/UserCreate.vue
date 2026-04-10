@@ -1,11 +1,5 @@
 <template>
-  <AdminLayout title="Create User">
-    <template #actions>
-      <router-link to="/admin/users" class="btn btn-secondary">
-        Back to Users
-      </router-link>
-    </template>
-
+  <div class="page">
     <div class="page-intro">
       <p>Add a new user account for the platform.</p>
     </div>
@@ -20,14 +14,13 @@
       @submit="submitForm"
       @cancel="goBack"
     />
-  </AdminLayout>
+  </div>
 </template>
 
 <script setup>
 import { reactive, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAdminUsersStore } from '../../stores/adminUsers';
-import AdminLayout from '../../components/layout/AdminLayout.vue';
 import UserForm from '../../components/admin/UserForm.vue';
 
 const router = useRouter();
@@ -49,7 +42,14 @@ async function submitForm() {
   submitting.value = true;
 
   try {
-    await store.createUser({ ...form });
+    await store.createUser({
+      username: form.username,
+      email: form.email,
+      password: form.password,
+      roleId: form.roleId,
+      accountStatus: form.accountStatus,
+    });
+
     router.push('/admin/users');
   } catch (error) {
     errorMessage.value = error?.response?.data?.message || 'Failed to create user';
@@ -68,22 +68,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .page-intro {
-  margin-bottom: 20px;
-  color: #666;
-}
-
-.btn {
-  display: inline-block;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  text-decoration: none;
-  text-align: center;
-}
-
-.btn-secondary {
-  background: #eaeaea;
-  color: #222;
+  color: #6b7280;
 }
 </style>

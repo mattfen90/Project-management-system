@@ -1,13 +1,13 @@
 <template>
   <div class="card form-card">
-    <form @submit.prevent="$emit('submit')">
+    <form @submit.prevent="$emit('submit')" class="form">
       <div class="form-grid">
         <div class="form-group">
           <label for="username">Username</label>
           <input
             id="username"
-            :value="localForm.username"
             type="text"
+            :value="modelValue.username"
             required
             @input="updateField('username', $event.target.value)"
           />
@@ -17,8 +17,8 @@
           <label for="email">Email</label>
           <input
             id="email"
-            :value="localForm.email"
             type="email"
+            :value="modelValue.email"
             required
             @input="updateField('email', $event.target.value)"
           />
@@ -30,13 +30,17 @@
           </label>
           <input
             id="password"
-            :value="localForm.password"
             :type="showPassword ? 'text' : 'password'"
-            :placeholder="isEdit ? 'Leave blank to keep current password' : ''"
+            :value="modelValue.password"
+            :placeholder="isEdit ? 'Leave blank to keep current password' : 'Enter password'"
             :required="!isEdit"
             @input="updateField('password', $event.target.value)"
           />
-          <button type="button" class="text-btn" @click="showPassword = !showPassword">
+          <button
+            type="button"
+            class="text-btn"
+            @click="showPassword = !showPassword"
+          >
             {{ showPassword ? 'Hide' : 'Show' }} password
           </button>
         </div>
@@ -45,7 +49,7 @@
           <label for="roleId">Role</label>
           <select
             id="roleId"
-            :value="localForm.roleId"
+            :value="modelValue.roleId"
             required
             @change="updateField('roleId', $event.target.value)"
           >
@@ -64,7 +68,7 @@
           <label for="accountStatus">Account Status</label>
           <select
             id="accountStatus"
-            :value="localForm.accountStatus"
+            :value="modelValue.accountStatus"
             required
             @change="updateField('accountStatus', $event.target.value)"
           >
@@ -76,14 +80,19 @@
         </div>
       </div>
 
-      <p v-if="error" class="error">{{ error }}</p>
+      <p v-if="error" class="error-text">{{ error }}</p>
 
       <div class="form-actions">
         <button type="submit" class="btn btn-primary" :disabled="loading">
           {{ loading ? loadingLabel : submitLabel }}
         </button>
 
-        <button type="button" class="btn btn-secondary" @click="$emit('cancel')">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          :disabled="loading"
+          @click="$emit('cancel')"
+        >
           Cancel
         </button>
       </div>
@@ -92,7 +101,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 
 const props = defineProps({
   modelValue: {
@@ -128,8 +137,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'submit', 'cancel']);
 const showPassword = ref(false);
 
-const localForm = computed(() => props.modelValue);
-
 function updateField(field, value) {
   emit('update:modelValue', {
     ...props.modelValue,
@@ -141,13 +148,19 @@ function updateField(field, value) {
 <style scoped>
 .card {
   background: #fff;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 24px;
 }
 
 .form-card {
   max-width: 760px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .form-grid {
@@ -162,37 +175,26 @@ function updateField(field, value) {
   gap: 8px;
 }
 
+.form-group label {
+  font-weight: 600;
+  color: #374151;
+}
+
 input,
 select {
+  width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
+  background: #fff;
+  color: #111827;
 }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.btn {
-  display: inline-block;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  text-decoration: none;
-  text-align: center;
-}
-
-.btn-primary {
-  background: #1f6feb;
-  color: white;
-}
-
-.btn-secondary {
-  background: #eaeaea;
-  color: #222;
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #1f6feb;
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.12);
 }
 
 .text-btn {
@@ -205,9 +207,40 @@ select {
   font-size: 13px;
 }
 
-.error {
-  margin-top: 16px;
-  color: #b42318;
+.form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: #1f6feb;
+  color: white;
+}
+
+.btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.error-text {
+  color: #b91c1c;
   font-weight: 600;
 }
 </style>
