@@ -6,10 +6,12 @@ export async function forgotPassword(email) {
     throw new Error('Email is required');
   }
 
-  const user = await prisma.user.findFirst({
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const user = await prisma.usertable.findFirst({
     where: {
-      email,
-      deletedAt: null,
+      Email: normalizedEmail,
+      deleted_at: null,
     },
   });
 
@@ -22,11 +24,11 @@ export async function forgotPassword(email) {
   const resetToken = crypto.randomBytes(32).toString('hex');
   const expiry = new Date(Date.now() + 60 * 60 * 1000);
 
-  await prisma.user.update({
-    where: { userId: user.userId },
+  await prisma.usertable.update({
+    where: { UserID: user.UserID },
     data: {
-      passwordResetToken: resetToken,
-      passwordResetTokenExpiry: expiry,
+      PasswordResetToken: resetToken,
+      PasswordResetTokenExpiry: expiry,
     },
   });
 

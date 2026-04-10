@@ -9,16 +9,16 @@ export async function loginUser(req) {
     throw new Error('MISSING_FIELDS');
   }
 
-  const user = await prisma.user.findFirst({
+  const user = await prisma.usertable.findFirst({
     where: {
       OR: [
-        { username: identifier },
-        { email: identifier },
+        { Username: identifier },
+        { Email: identifier },
       ],
-      deletedAt: null,
+      deleted_at: null,
     },
     include: {
-      role: true,  // ✅ Fixed: use 'role', not 'userRole'
+      userrolestable: true,
     },
   });
 
@@ -26,45 +26,49 @@ export async function loginUser(req) {
     throw new Error('INVALID_CREDENTIALS');
   }
 
-  if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+  if (user.LockedUntil && new Date(user.LockedUntil) > new Date()) {
     throw new Error('ACCOUNT_LOCKED');
   }
 
-  if (user.accountStatus !== 'Active') {
+  if (user.AccountStatus !== 'Active') {
     throw new Error('ACCOUNT_INACTIVE');
   }
 
-  const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+  const passwordMatch = await bcrypt.compare(password, user.PasswordHash);
 
   if (!passwordMatch) {
+    await prisma.usertable.update({
+      where: { UserID: user.UserID },
+      data: { FailedLoginAttempts: { increment: 1 } },
+    });
     throw new Error('INVALID_CREDENTIALS');
   }
 
   const token = jwt.sign(
     {
-      userId: user.userId,
-      role: user.role.userRoleName,
-      email: user.email,
+      userId: user.UserID.toString(),
+      role: user.userrolestable.UserRoleName,
+      email: user.Email,
     },
     process.env.JWT_SECRET,
     { expiresIn: '1h' }
   );
 
-  await prisma.user.update({
-    where: { userId: user.userId },
+  await prisma.usertable.update({
+    where: { UserID: user.UserID },
     data: {
-      lastLoginAt: new Date(),
-      failedLoginAttempts: 0,
+      LastLoginAt: new Date(),
+      FailedLoginAttempts: 0,
     },
   });
 
   return {
     token,
     user: {
-      userId: user.userId,
-      username: user.username,
-      email: user.email,
-      role: user.role.userRoleName,
+      userId: user.UserID.toString(),
+      username: user.Username,
+      email: user.Email,
+      role: user.userrolestable.UserRoleName,
     },
   };
 }

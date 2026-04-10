@@ -6,13 +6,13 @@ export async function resetPassword(token, newPassword) {
     throw new Error('Token and new password are required');
   }
 
-  const user = await prisma.user.findFirst({
+  const user = await prisma.usertable.findFirst({
     where: {
-      passwordResetToken: token,
-      passwordResetTokenExpiry: {
+      PasswordResetToken: token,
+      PasswordResetTokenExpiry: {
         gt: new Date(),
       },
-      deletedAt: null,
+      deleted_at: null,
     },
   });
 
@@ -22,15 +22,15 @@ export async function resetPassword(token, newPassword) {
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
 
-  await prisma.user.update({
-    where: { userId: user.userId },
+  await prisma.usertable.update({
+    where: { UserID: user.UserID },
     data: {
-      passwordHash,
-      passwordResetToken: null,
-      passwordResetTokenExpiry: null,
-      lastPasswordChangeAt: new Date(),
-      failedLoginAttempts: 0,
-      lockedUntil: null,
+      PasswordHash: passwordHash,
+      PasswordResetToken: null,
+      PasswordResetTokenExpiry: null,
+      LastPasswordChangeAt: new Date(),
+      FailedLoginAttempts: 0,
+      LockedUntil: null,
     },
   });
 
