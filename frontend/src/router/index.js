@@ -6,6 +6,9 @@ import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
 import Unauthorized from '../views/Unauthorized.vue';
 import VerifyEmail from '../views/VerifyEmail.vue';
+import UserList from '../views/UserList.vue';
+import UserEdit from '../views/UserEdit.vue';
+import UserCreate from '../views/UserCreate.vue';
 
 // Public routes — accessible without a token
 const PUBLIC_ROUTES = ['login', 'forgot-password', 'reset-password', 'unauthorized', 'verify-email'];
@@ -17,6 +20,9 @@ const routes = [
   { path: '/reset-password',  name: 'reset-password',  component: ResetPassword },
   { path: '/verify-email',    name: 'verify-email',    component: VerifyEmail },
   { path: '/unauthorized',    name: 'unauthorized',    component: Unauthorized },
+  { path: '/admin/users',          name: 'admin-users',        component: UserList,   meta: { requiresAuth: true, roles: ['Admin'] } },
+{ path: '/admin/users/create',   name: 'admin-users-create', component: UserCreate, meta: { requiresAuth: true, roles: ['Admin'] } },
+{ path: '/admin/users/:id/edit', name: 'admin-users-edit',   component: UserEdit,   meta: { requiresAuth: true, roles: ['Admin'] } },
 
   // Protected — all authenticated roles
   {
