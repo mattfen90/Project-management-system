@@ -4,7 +4,7 @@
       <h2>Login</h2>
       <Form @submit="onSubmit" :validation-schema="schema" v-slot="{ errors }">
         <div class="form-group">
-          abel>Username or Email</label>
+          <label>Username or Email</label>
           <Field
             v-model="identifier"
             name="identifier"
@@ -14,7 +14,7 @@
           <div class="invalid-feedback">{{ errors.identifier }}</div>
         </div>
         <div class="form-group">
-          abel>Password</label>
+         <label>Password</label>
           <Field
             v-model="password"
             name="password"

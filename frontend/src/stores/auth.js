@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import { router } from '../router';
+import { router } from '../router/index.js';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -45,7 +45,7 @@ export const useAuthStore = defineStore('auth', {
       const user = localStorage.getItem('user');
       if (token && user) {
         this.token = token;
-        this.user = JSON.stringify(user);
+        this.user = JSON.parse(user);
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       }
     },
