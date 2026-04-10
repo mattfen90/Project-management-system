@@ -1,18 +1,18 @@
+require('dotenv').config();
+
 const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
 const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
-const mariadb = require('mariadb');
 
 async function main() {
-  const connection = await mariadb.createConnection({
-    host: 'localhost',
-    port: 3306,
-    user: 'root',
-    password: process.env.MYSQL_ROOT_PASSWORD || 'yourpassword',
-    database: 'project_managemenet_db',  // your DB name
+  const adapter = new PrismaMariaDb({
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
   });
 
-  const adapter = new PrismaMariaDb(connection);
   const prisma = new PrismaClient({ adapter });
 
   const roles = ['Admin', 'Owner', 'Project Manager', 'Client', 'Worker'];
@@ -29,8 +29,7 @@ async function main() {
     where: { userRoleName: 'Admin' },
   });
 
-  const password = 'Admin12345!';
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash('Admin12345!', 10);
 
   await prisma.user.upsert({
     where: { email: 'admin@example.com' },
@@ -48,11 +47,10 @@ async function main() {
   });
 
   await prisma.$disconnect();
-  console.log('Seed completed. Test login: admin / Admin12345!');
+  console.log('Seed completed');
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+main().catch(async (e) => {
+  console.error(e);
+  process.exit(1);
+});
