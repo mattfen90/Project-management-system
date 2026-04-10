@@ -4,9 +4,9 @@ import Login from '../views/Login.vue';
 import Dashboard from '../views/Dashboard.vue';
 
 const routes = [
-  { path: '/login', name: 'login', component: Login },
-  { path: '/dashboard', name: 'dashboard', component: Dashboard },
-  { path: '/', redirect: '/dashboard' },
+ { path: '/login', name: 'login', component: Login },
+  { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue') },
+  { path: '/', redirect: '/login' },
 ];
 
 const router = createRouter({
