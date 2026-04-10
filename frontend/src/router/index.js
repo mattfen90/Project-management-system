@@ -4,13 +4,28 @@ import Login from '../views/Login.vue';
 import Dashboard from '../views/Dashboard.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
+import Unauthorized from '../views/Unauthorized.vue';
+
+// Public routes — accessible without a token
+const PUBLIC_ROUTES = ['login', 'forgot-password', 'reset-password', 'unauthorized'];
 
 const routes = [
- { path: '/login', name: 'login', component: Login },
-  { path: '/dashboard', name: 'dashboard', component: () => import('../views/Dashboard.vue') },
+  // Auth
+  { path: '/login',           name: 'login',           component: Login },
   { path: '/forgot-password', name: 'forgot-password', component: ForgotPassword },
-  { path: '/reset-password', name: 'reset-password', component: ResetPassword },
+  { path: '/reset-password',  name: 'reset-password',  component: ResetPassword },
+  { path: '/unauthorized',    name: 'unauthorized',    component: Unauthorized },
 
+  // Protected — all authenticated roles
+  {
+    path: '/dashboard',
+    name: 'dashboard',
+    component: Dashboard,
+    meta: { requiresAuth: true },
+  },
+
+  // Catch-all redirect
+  { path: '/:pathMatch(.*)*', redirect: '/login' },
   { path: '/', redirect: '/login' },
 ];
 
@@ -23,13 +38,27 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   authStore.loadUserFromStorage();
 
-  if (!authStore.user && !['login', 'forgot-password', 'reset-password'].includes(to.name)) {
-    next('/login');
-  } else if (authStore.user && ['login', 'forgot-password', 'reset-password'].includes(to.name)) {
-    next('/dashboard');
-  } else {
-    next();
+  const isPublic = PUBLIC_ROUTES.includes(to.name);
+  const isLoggedIn = !!authStore.user;
+  const userRole = authStore.user?.role;
+
+  // Redirect logged-in users away from auth pages
+  if (isLoggedIn && ['login', 'forgot-password', 'reset-password'].includes(to.name)) {
+    return next('/dashboard');
   }
+
+  // Block unauthenticated users from protected routes
+  if (!isLoggedIn && !isPublic) {
+    return next('/login');
+  }
+
+  // Role-based access check
+  const allowedRoles = to.meta?.roles;
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
+    return next('/unauthorized');
+  }
+
+  next();
 });
 
 export default router;
