@@ -31,13 +31,20 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    logout() {
-      this.user = null;
-      this.token = null;
-      delete axios.defaults.headers.common['Authorization'];
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      router.push('/login');
+    async logout() {
+      try {
+        // Notify the backend — records the logout and invalidates the token server-side
+        await axios.post(`${API_URL}/auth/logout`);
+      } catch {
+        // Even if the request fails, proceed with client-side cleanup
+      } finally {
+        this.user = null;
+        this.token = null;
+        delete axios.defaults.headers.common['Authorization'];
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
+      }
     },
 
     loadUserFromStorage() {
