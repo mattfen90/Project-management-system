@@ -45,7 +45,7 @@
 
         <p v-if="store.error" class="error-text">{{ store.error }}</p>
 
-        <div v-if="store.loadingUsers" class="info-text">Loading available users...</p>
+        <div v-if="store.loadingUsers" class="info-text"><p>Loading available users...</p></div>
         <div v-else-if="!store.linkableUsers.length" class="info-text">No unlinked Client users available.</div>
 
         <div v-else class="link-form">
