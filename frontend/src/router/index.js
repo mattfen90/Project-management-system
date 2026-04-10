@@ -12,6 +12,8 @@ import AdminLayout from '../views/admin/AdminLayout.vue';
 import UserList from '../views/admin/UserList.vue';
 import UserCreate from '../views/admin/UserCreate.vue';
 import UserEdit from '../views/admin/UserEdit.vue';
+import ClientLinkUser from '../views/admin/ClientLinkUser.vue';
+import WorkerLinkUser from '../views/admin/WorkerLinkUser.vue';
 
 const PUBLIC_ROUTES = ['login', 'forgot-password', 'reset-password', 'unauthorized', 'verify-email'];
 
@@ -34,6 +36,7 @@ const routes = [
     component: AdminLayout,
     meta: { requiresAuth: true, roles: ['Admin'] },
     children: [
+      // ── User Management ──────────────────────────────────────
       {
         path: 'users',
         name: 'admin-users',
@@ -66,6 +69,30 @@ const routes = [
           roles: ['Admin'],
           title: 'Edit User',
           subtitle: 'Update user account details, role, and status.',
+        },
+      },
+
+      // ── Account Linking ───────────────────────────────────────
+      {
+        path: 'clients/:id/link-user',
+        name: 'admin-clients-link-user',
+        component: ClientLinkUser,
+        meta: {
+          requiresAuth: true,
+          roles: ['Admin'],
+          title: 'Link User to Client',
+          subtitle: 'Attach a platform user account to this client record.',
+        },
+      },
+      {
+        path: 'workers/:id/link-user',
+        name: 'admin-workers-link-user',
+        component: WorkerLinkUser,
+        meta: {
+          requiresAuth: true,
+          roles: ['Admin'],
+          title: 'Link User to Worker',
+          subtitle: 'Attach a platform user account to this worker record.',
         },
       },
     ],
