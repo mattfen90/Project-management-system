@@ -1,13 +1,67 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+  
+}
+
+model UserRole {
+  userRoleId   Int      @id @default(autoincrement()) @map("UserRoleID")
+  userRoleName String   @unique @db.VarChar(100) @map("UserRoleName")
+  createdAt    DateTime @default(now()) @map("createdat")
+  updatedAt    DateTime @updatedAt @map("updatedat")
+
+  users        User[]
+
+  @@map("UserRolesTable")
+}
+
+model User {
+  userId                        Int        @id @default(autoincrement()) @map("UserID")
+  userRoleId                    Int        @map("UserRoleID")
+  username                      String     @unique @db.VarChar(100) @map("Username")
+  passwordHash                  String     @db.VarChar(255) @map("PasswordHash")
+  email                         String     @unique @db.VarChar(255) @map("Email")
+  emailVerified                 Boolean    @default(false) @map("EmailVerified")
+  emailVerificationToken        String?    @db.VarChar(255) @map("EmailVerificationToken")
+  emailVerificationTokenExpiry  DateTime?  @map("EmailVerificationTokenExpiry")
+  passwordResetToken            String?    @db.VarChar(255) @map("PasswordResetToken")
+  passwordResetTokenExpiry      DateTime?  @map("PasswordResetTokenExpiry")
+  failedLoginAttempts           Int        @default(0) @map("FailedLoginAttempts")
+  lockedUntil                   DateTime?  @map("LockedUntil")
+  lastLoginAt                   DateTime?  @map("LastLoginAt")
+  lastPasswordChangeAt          DateTime?  @map("LastPasswordChangeAt")
+  twoFactorEnabled              Boolean    @default(false) @map("TwoFactorEnabled")
+  twoFactorSecret               String?    @db.VarChar(255) @map("TwoFactorSecret")
+  accountStatus                 String     @db.VarChar(50) @map("AccountStatus")
+  createdAt                     DateTime   @default(now()) @map("createdat")
+  updatedAt                     DateTime   @updatedAt @map("updatedat")
+  deletedAt                     DateTime?  @map("deletedat")
+
+  role                          UserRole   @relation(fields: [userRoleId], references: [userRoleId])
+  logins                        UserLogin[]
+
+  @@index([userRoleId])
+  @@map("UserTable")
+}
+
+model UserLogin {
+  userLoginId    Int       @id @default(autoincrement()) @map("UserLoginID")
+  userId         Int       @map("UserID")
+  loginTime      DateTime  @default(now()) @map("LoginTime")
+  ipAddress      String    @db.VarChar(100) @map("IPAddress")
+  success        Boolean   @map("Success")
+  userAgent      String?   @db.VarChar(255) @map("UserAgent")
+  sessionToken   String?   @db.VarChar(500) @map("SessionToken")
+  logoutTime     DateTime? @map("LogoutTime")
+  deviceInfo     String?   @db.Text @map("DeviceInfo")
+  failureReason  String?   @db.VarChar(255) @map("FailureReason")
+  createdAt      DateTime  @default(now()) @map("createdat")
+
+  user           User      @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@map("UserLoginTable")
 }
