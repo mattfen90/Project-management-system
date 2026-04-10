@@ -65,3 +65,26 @@ export async function listRoles(req, res) {
     res.status(500).json({ message: 'Failed to retrieve roles' });
   }
 }
+
+// ── 4.4 Account Status Management ────────────────────────────────────────────
+
+export async function updateAccountStatus(req, res) {
+  try {
+    const user = await usersService.updateAccountStatus(req.params.id, req.body);
+    res.json(user);
+  } catch (err) {
+    if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+    if (err.message === 'INVALID_STATUS') return res.status(400).json({ message: 'Invalid account status. Must be Active, Locked, Disabled, or Pending Verification' });
+    res.status(500).json({ message: 'Failed to update account status' });
+  }
+}
+
+export async function unlockAccount(req, res) {
+  try {
+    const user = await usersService.unlockAccount(req.params.id);
+    res.json(user);
+  } catch (err) {
+    if (err.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+    res.status(500).json({ message: 'Failed to unlock account' });
+  }
+}

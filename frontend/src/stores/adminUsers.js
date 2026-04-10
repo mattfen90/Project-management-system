@@ -16,11 +16,11 @@ export const useAdminUsersStore = defineStore('adminUsers', {
   }),
 
   actions: {
-    async fetchUsers(params = {}) {
+    async fetchUsers(params) {
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await axios.get(`${API_URL}/admin/users`, { params: { page: this.page, limit: this.limit, ...params } });
+        const { data } = await axios.get(`${API_URL}/admin/users`, { params });
         this.users = data.users;
         this.total = data.total;
       } catch (err) {
@@ -62,6 +62,26 @@ export const useAdminUsersStore = defineStore('adminUsers', {
     async deleteUser(id) {
       await axios.delete(`${API_URL}/admin/users/${id}`);
       await this.fetchUsers();
+    },
+
+    // ── 4.4 Account Status Management ────────────────────────────────────────
+    async updateAccountStatus(id, status, lockedUntil = null) {
+      const payload = { status };
+      if (lockedUntil) payload.lockedUntil = lockedUntil;
+      const { data } = await axios.put(`${API_URL}/admin/users/${id}/status`, payload);
+      // Update in local list without full refetch
+      const idx = this.users.findIndex(u => u.UserID === data.UserID);
+      if (idx !== -1) this.users[idx] = { ...this.users[idx], ...data };
+      if (this.selectedUser?.UserID === data.UserID) this.selectedUser = { ...this.selectedUser, ...data };
+      return data;
+    },
+
+    async unlockAccount(id) {
+      const { data } = await axios.post(`${API_URL}/admin/users/${id}/unlock`);
+      const idx = this.users.findIndex(u => u.UserID === data.UserID);
+      if (idx !== -1) this.users[idx] = { ...this.users[idx], ...data };
+      if (this.selectedUser?.UserID === data.UserID) this.selectedUser = { ...this.selectedUser, ...data };
+      return data;
     },
   },
 });

@@ -30,6 +30,7 @@ export async function getAllUsers({ page = 1, limit = 20, search = '', role = ''
         Email: true,
         EmailVerified: true,
         AccountStatus: true,
+        LockedUntil: true,
         LastLoginAt: true,
         created_at: true,
         userrolestable: { select: { UserRoleID: true, UserRoleName: true } },
@@ -141,5 +142,67 @@ export async function getRoles() {
   return prisma.userrolestable.findMany({
     select: { UserRoleID: true, UserRoleName: true },
     orderBy: { UserRoleName: 'asc' },
+  });
+}
+
+// ── 4.4 Account Status Management ────────────────────────────────────────────
+
+const VALID_STATUSES = ['Active', 'Locked', 'Disabled', 'Pending Verification'];
+
+export async function updateAccountStatus(id, { status, lockedUntil }) {
+  if (!status || !VALID_STATUSES.includes(status)) throw new Error('INVALID_STATUS');
+
+  const user = await prisma.usertable.findFirst({
+    where: { UserID: Number(id), deleted_at: null },
+  });
+  if (!user) throw new Error('USER_NOT_FOUND');
+
+  const data = { AccountStatus: status };
+
+  if (status === 'Locked') {
+    data.LockedUntil = lockedUntil ? new Date(lockedUntil) : new Date(Date.now() + 24 * 60 * 60 * 1000);
+  } else {
+    // Clear lock fields when setting to any non-locked status
+    data.LockedUntil = null;
+    data.FailedLoginAttempts = 0;
+  }
+
+  return prisma.usertable.update({
+    where: { UserID: Number(id) },
+    data,
+    select: {
+      UserID: true,
+      Username: true,
+      Email: true,
+      AccountStatus: true,
+      FailedLoginAttempts: true,
+      LockedUntil: true,
+      userrolestable: { select: { UserRoleID: true, UserRoleName: true } },
+    },
+  });
+}
+
+export async function unlockAccount(id) {
+  const user = await prisma.usertable.findFirst({
+    where: { UserID: Number(id), deleted_at: null },
+  });
+  if (!user) throw new Error('USER_NOT_FOUND');
+
+  return prisma.usertable.update({
+    where: { UserID: Number(id) },
+    data: {
+      AccountStatus: 'Active',
+      LockedUntil: null,
+      FailedLoginAttempts: 0,
+    },
+    select: {
+      UserID: true,
+      Username: true,
+      Email: true,
+      AccountStatus: true,
+      FailedLoginAttempts: true,
+      LockedUntil: true,
+      userrolestable: { select: { UserRoleID: true, UserRoleName: true } },
+    },
   });
 }

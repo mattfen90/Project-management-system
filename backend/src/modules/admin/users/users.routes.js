@@ -8,11 +8,15 @@ const router = Router();
 router.use(authenticate);
 router.use(authorise('Admin'));
 
-router.get('/',        usersController.listUsers);
-router.get('/roles',   usersController.listRoles);
-router.get('/:id',     usersController.getUser);
-router.post('/',       usersController.createUser);
-router.put('/:id',     usersController.updateUser);
-router.delete('/:id',  usersController.deleteUser);
+router.get('/',                       usersController.listUsers);
+router.get('/roles',                  usersController.listRoles);
+router.get('/:id',                    usersController.getUser);
+router.post('/',                      usersController.createUser);
+router.put('/:id',                    usersController.updateUser);
+router.delete('/:id',                 usersController.deleteUser);
+
+// 4.4 Account Status Management
+router.put('/:id/status',             usersController.updateAccountStatus);
+router.post('/:id/unlock',            usersController.unlockAccount);
 
 export default router;
