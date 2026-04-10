@@ -2,25 +2,25 @@
   <div class="login-container">
     <div class="login-card">
       <h2>Login</h2>
-      <Form @submit="onSubmit" :validation-schema="schema" v-slot="{ errors }">
+      <Form @submit="onSubmit" :validation-schema="schema" v-slot="{ errors, isSubmitting }">
         <div class="form-group">
           <label>Username or Email</label>
           <Field
-            v-model="identifier"
             name="identifier"
             class="form-control"
             :class="{ 'is-invalid': errors.identifier }"
+            placeholder="Enter username or email"
           />
           <div class="invalid-feedback">{{ errors.identifier }}</div>
         </div>
         <div class="form-group">
-         <label>Password</label>
+          <label>Password</label>
           <Field
-            v-model="password"
             name="password"
             type="password"
             class="form-control"
             :class="{ 'is-invalid': errors.password }"
+            placeholder="Enter password"
           />
           <div class="invalid-feedback">{{ errors.password }}</div>
         </div>
@@ -40,8 +40,6 @@ import * as Yup from 'yup';
 import { useAuthStore } from '../stores/auth';
 
 const authStore = useAuthStore();
-const identifier = ref('');
-const password = ref('');
 const error = ref('');
 
 const schema = Yup.object().shape({
@@ -79,8 +77,21 @@ const onSubmit = async (values) => {
   max-width: 400px;
 }
 
+.login-card h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #333;
+}
+
 .form-group {
   margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  color: #555;
 }
 
 .form-control {
@@ -89,6 +100,7 @@ const onSubmit = async (values) => {
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 1rem;
+  box-sizing: border-box;
 }
 
 .form-control.is-invalid {
@@ -108,6 +120,7 @@ const onSubmit = async (values) => {
   border-radius: 5px;
   font-size: 1rem;
   cursor: pointer;
+  margin-top: 0.5rem;
 }
 
 .btn-primary {
@@ -127,5 +140,9 @@ const onSubmit = async (values) => {
 .alert {
   padding: 0.75rem;
   border-radius: 5px;
+  margin-top: 1rem;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 </style>

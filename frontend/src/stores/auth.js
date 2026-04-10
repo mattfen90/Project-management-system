@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import { router } from '../router/index.js';
+import router from '../router/index.js';
 
 const API_URL = 'http://localhost:5000/api';
 
