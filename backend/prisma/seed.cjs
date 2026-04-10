@@ -18,31 +18,31 @@ async function main() {
   const roles = ['Admin', 'Owner', 'Project Manager', 'Client', 'Worker'];
 
   for (const roleName of roles) {
-    await prisma.userRole.upsert({
-      where: { userRoleName: roleName },
+    await prisma.userrolestable.upsert({
+      where: { UserRoleName: roleName },
       update: {},
-      create: { userRoleName: roleName },
+      create: { UserRoleName: roleName },
     });
   }
 
-  const adminRole = await prisma.userRole.findUnique({
-    where: { userRoleName: 'Admin' },
+  const adminRole = await prisma.userrolestable.findUnique({
+    where: { UserRoleName: 'Admin' },
   });
 
   const hashedPassword = await bcrypt.hash('Admin12345!', 10);
 
-  await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
+  await prisma.usertable.upsert({
+    where: { Email: 'admin@example.com' },
     update: {},
     create: {
-      userRoleId: adminRole.userRoleId,
-      username: 'admin',
-      passwordHash: hashedPassword,
-      email: 'admin@example.com',
-      emailVerified: true,
-      failedLoginAttempts: 0,
-      twoFactorEnabled: false,
-      accountStatus: 'Active',
+      UserRoleID: adminRole.UserRoleID,
+      Username: 'admin',
+      PasswordHash: hashedPassword,
+      Email: 'admin@example.com',
+      EmailVerified: true,
+      FailedLoginAttempts: 0,
+      TwoFactorEnabled: false,
+      AccountStatus: 'Active',
     },
   });
 
