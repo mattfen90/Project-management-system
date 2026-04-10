@@ -14,6 +14,9 @@ import UserCreate from '../views/admin/UserCreate.vue';
 import UserEdit from '../views/admin/UserEdit.vue';
 import ClientLinkUser from '../views/admin/ClientLinkUser.vue';
 import WorkerLinkUser from '../views/admin/WorkerLinkUser.vue';
+import ClientList from '../views/admin/ClientList.vue';
+import ClientCreate from '../views/admin/ClientCreate.vue';
+import ClientEdit from '../views/admin/ClientEdit.vue';
 
 const PUBLIC_ROUTES = ['login', 'forgot-password', 'reset-password', 'unauthorized', 'verify-email'];
 
@@ -47,6 +50,7 @@ const routes = [
           title: 'User Management',
           subtitle: 'Manage platform users, roles, and account statuses.',
           showCreateButton: true,
+          createRoute: 'admin-users-create',
         },
       },
       {
@@ -93,6 +97,43 @@ const routes = [
           roles: ['Admin'],
           title: 'Link User to Worker',
           subtitle: 'Attach a platform user account to this worker record.',
+        },
+      },
+
+      // ── Client Management ─────────────────────────────────────
+      {
+        path: 'clients',
+        name: 'admin-clients',
+        component: ClientList,
+        meta: {
+          requiresAuth: true,
+          roles: ['Admin'],
+          title: 'Client Management',
+          subtitle: 'Manage clients, their details, and linked user accounts.',
+          showCreateButton: true,
+          createRoute: 'admin-clients-create',
+        },
+      },
+      {
+        path: 'clients/create',
+        name: 'admin-clients-create',
+        component: ClientCreate,
+        meta: {
+          requiresAuth: true,
+          roles: ['Admin'],
+          title: 'Create Client',
+          subtitle: 'Add a new client record to the platform.',
+        },
+      },
+      {
+        path: 'clients/:id/edit',
+        name: 'admin-clients-edit',
+        component: ClientEdit,
+        meta: {
+          requiresAuth: true,
+          roles: ['Admin'],
+          title: 'Edit Client',
+          subtitle: 'Update client details and status.',
         },
       },
     ],
