@@ -4,64 +4,685 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  
 }
 
-model UserRole {
-  userRoleId   Int      @id @default(autoincrement()) @map("UserRoleID")
-  userRoleName String   @unique @db.VarChar(100) @map("UserRoleName")
-  createdAt    DateTime @default(now()) @map("createdat")
-  updatedAt    DateTime @updatedAt @map("updatedat")
+model attachmentstable {
+  AttachmentID     BigInt                      @id @default(autoincrement()) @db.UnsignedBigInt
+  EntityType       attachmentstable_EntityType
+  EntityID         BigInt                      @db.UnsignedBigInt
+  FileName         String                      @db.VarChar(255)
+  FilePath         String                      @db.VarChar(500)
+  MimeType         String?                     @db.VarChar(100)
+  FileSizeBytes    BigInt?                     @db.UnsignedBigInt
+  UploadedByUserID BigInt                      @db.UnsignedBigInt
+  created_at       DateTime                    @default(now()) @db.DateTime(0)
+  updated_at       DateTime                    @default(now()) @db.DateTime(0)
+  deleted_at       DateTime?                   @db.DateTime(0)
+  usertable        usertable                   @relation(fields: [UploadedByUserID], references: [UserID], map: "fk_attachments_uploadedby")
+  proofofworktable proofofworktable[]
 
-  users        User[]
-
-  @@map("UserRolesTable")
+  @@index([deleted_at], map: "idx_attachments_deleted_at")
+  @@index([EntityType, EntityID], map: "idx_attachments_entity")
+  @@index([MimeType], map: "idx_attachments_mimetype")
+  @@index([UploadedByUserID], map: "idx_attachments_uploadedby")
 }
 
-model User {
-  userId                        Int        @id @default(autoincrement()) @map("UserID")
-  userRoleId                    Int        @map("UserRoleID")
-  username                      String     @unique @db.VarChar(100) @map("Username")
-  passwordHash                  String     @db.VarChar(255) @map("PasswordHash")
-  email                         String     @unique @db.VarChar(255) @map("Email")
-  emailVerified                 Boolean    @default(false) @map("EmailVerified")
-  emailVerificationToken        String?    @db.VarChar(255) @map("EmailVerificationToken")
-  emailVerificationTokenExpiry  DateTime?  @map("EmailVerificationTokenExpiry")
-  passwordResetToken            String?    @db.VarChar(255) @map("PasswordResetToken")
-  passwordResetTokenExpiry      DateTime?  @map("PasswordResetTokenExpiry")
-  failedLoginAttempts           Int        @default(0) @map("FailedLoginAttempts")
-  lockedUntil                   DateTime?  @map("LockedUntil")
-  lastLoginAt                   DateTime?  @map("LastLoginAt")
-  lastPasswordChangeAt          DateTime?  @map("LastPasswordChangeAt")
-  twoFactorEnabled              Boolean    @default(false) @map("TwoFactorEnabled")
-  twoFactorSecret               String?    @db.VarChar(255) @map("TwoFactorSecret")
-  accountStatus                 String     @db.VarChar(50) @map("AccountStatus")
-  createdAt                     DateTime   @default(now()) @map("createdat")
-  updatedAt                     DateTime   @updatedAt @map("updatedat")
-  deletedAt                     DateTime?  @map("deletedat")
+model clientprojecttable {
+  ClientProjectID BigInt       @id @default(autoincrement()) @db.UnsignedBigInt
+  ClientID        BigInt       @db.UnsignedBigInt
+  ProjectID       BigInt       @db.UnsignedBigInt
+  created_at      DateTime     @default(now()) @db.DateTime(0)
+  updated_at      DateTime     @default(now()) @db.DateTime(0)
+  clienttable     clienttable  @relation(fields: [ClientID], references: [ClientID], onDelete: Cascade, map: "fk_clientproject_client")
+  projecttable    projecttable @relation(fields: [ProjectID], references: [ProjectID], onDelete: Cascade, map: "fk_clientproject_project")
 
-  role                          UserRole   @relation(fields: [userRoleId], references: [userRoleId])
-  logins                        UserLogin[]
-
-  @@index([userRoleId])
-  @@map("UserTable")
+  @@unique([ClientID, ProjectID], map: "uq_client_project")
+  @@index([ClientID], map: "idx_clientproject_client")
+  @@index([ProjectID], map: "idx_clientproject_project")
 }
 
-model UserLogin {
-  userLoginId    Int       @id @default(autoincrement()) @map("UserLoginID")
-  userId         Int       @map("UserID")
-  loginTime      DateTime  @default(now()) @map("LoginTime")
-  ipAddress      String    @db.VarChar(100) @map("IPAddress")
-  success        Boolean   @map("Success")
-  userAgent      String?   @db.VarChar(255) @map("UserAgent")
-  sessionToken   String?   @db.VarChar(500) @map("SessionToken")
-  logoutTime     DateTime? @map("LogoutTime")
-  deviceInfo     String?   @db.Text @map("DeviceInfo")
-  failureReason  String?   @db.VarChar(255) @map("FailureReason")
-  createdAt      DateTime  @default(now()) @map("createdat")
+model clienttable {
+  ClientID           BigInt                   @id @default(autoincrement()) @db.UnsignedBigInt
+  UserID             BigInt?                  @unique(map: "uq_clients_userid") @db.UnsignedBigInt
+  ClientName         String                   @db.VarChar(150)
+  ClientSurname      String?                  @db.VarChar(150)
+  ClientEmail        String                   @db.VarChar(255)
+  ClientTelephone    String?                  @db.VarChar(50)
+  ClientMobile       String?                  @db.VarChar(50)
+  ClientAddress      String?                  @db.Text
+  ClientWebsite      String?                  @db.VarChar(255)
+  ClientType         String                   @db.VarChar(100)
+  ClientStatus       clienttable_ClientStatus @default(Active)
+  Notes              String?                  @db.Text
+  created_at         DateTime                 @default(now()) @db.DateTime(0)
+  updated_at         DateTime                 @default(now()) @db.DateTime(0)
+  deleted_at         DateTime?                @db.DateTime(0)
+  clientprojecttable clientprojecttable[]
+  usertable          usertable?               @relation(fields: [UserID], references: [UserID], map: "fk_clients_user")
+  invoicestable      invoicestable[]
 
-  user           User      @relation(fields: [userId], references: [userId])
+  @@index([deleted_at], map: "idx_clients_deleted_at")
+  @@index([ClientEmail], map: "idx_clients_email")
+  @@index([ClientName, ClientSurname], map: "idx_clients_name")
+  @@index([ClientStatus], map: "idx_clients_status")
+}
 
-  @@index([userId])
-  @@map("UserLoginTable")
+model contactmessagestable {
+  ContactMessageID                                          BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  SenderUserID                                              BigInt        @db.UnsignedBigInt
+  RecipientUserID                                           BigInt?       @db.UnsignedBigInt
+  RecipientRole                                             String?       @db.VarChar(100)
+  RelatedProjectID                                          BigInt?       @db.UnsignedBigInt
+  Subject                                                   String?       @db.VarChar(255)
+  MessageBody                                               String        @db.Text
+  IsRead                                                    Boolean       @default(false)
+  RepliedAt                                                 DateTime?     @db.DateTime(0)
+  created_at                                                DateTime      @default(now()) @db.DateTime(0)
+  updated_at                                                DateTime      @default(now()) @db.DateTime(0)
+  deleted_at                                                DateTime?     @db.DateTime(0)
+  projecttable                                              projecttable? @relation(fields: [RelatedProjectID], references: [ProjectID], map: "fk_contactmessages_project")
+  usertable_contactmessagestable_RecipientUserIDTousertable usertable?    @relation("contactmessagestable_RecipientUserIDTousertable", fields: [RecipientUserID], references: [UserID], map: "fk_contactmessages_recipient")
+  usertable_contactmessagestable_SenderUserIDTousertable    usertable     @relation("contactmessagestable_SenderUserIDTousertable", fields: [SenderUserID], references: [UserID], onDelete: Cascade, map: "fk_contactmessages_sender")
+
+  @@index([created_at], map: "idx_contactmessages_created")
+  @@index([deleted_at], map: "idx_contactmessages_deleted_at")
+  @@index([RelatedProjectID], map: "idx_contactmessages_project")
+  @@index([IsRead], map: "idx_contactmessages_read")
+  @@index([RecipientUserID], map: "idx_contactmessages_recipient")
+  @@index([SenderUserID], map: "idx_contactmessages_sender")
+}
+
+model helparticlestable {
+  HelpArticleID BigInt                         @id @default(autoincrement()) @db.UnsignedBigInt
+  AudienceRole  helparticlestable_AudienceRole
+  Title         String                         @db.VarChar(255)
+  Slug          String                         @unique(map: "uq_helparticles_slug") @db.VarChar(255)
+  ContentBody   String                         @db.LongText
+  IsPublished   Boolean                        @default(false)
+  created_at    DateTime                       @default(now()) @db.DateTime(0)
+  updated_at    DateTime                       @default(now()) @db.DateTime(0)
+
+  @@index([IsPublished], map: "idx_helparticles_published")
+  @@index([AudienceRole], map: "idx_helparticles_role")
+}
+
+model invoiceitemstable {
+  InvoiceItemID   BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  InvoiceID       BigInt        @db.UnsignedBigInt
+  LineDescription String        @db.VarChar(255)
+  Quantity        Decimal       @default(1.00) @db.Decimal(12, 2)
+  UnitPrice       Decimal       @default(0.00) @db.Decimal(15, 2)
+  TaxRate         Decimal?      @db.Decimal(5, 2)
+  LineTotal       Decimal       @default(0.00) @db.Decimal(15, 2)
+  created_at      DateTime      @default(now()) @db.DateTime(0)
+  updated_at      DateTime      @default(now()) @db.DateTime(0)
+  invoicestable   invoicestable @relation(fields: [InvoiceID], references: [InvoiceID], onDelete: Cascade, map: "fk_invoiceitems_invoice")
+
+  @@index([InvoiceID], map: "idx_invoiceitems_invoice")
+}
+
+model invoicestable {
+  InvoiceID            BigInt                      @id @default(autoincrement()) @db.UnsignedBigInt
+  InvoiceUUID          String                      @unique(map: "uq_invoices_uuid") @db.Char(36)
+  InvoiceName          String                      @db.VarChar(255)
+  InvoiceLink          String?                     @db.VarChar(500)
+  InvoiceStatus        invoicestable_InvoiceStatus @default(Draft)
+  InvoiceAmount        Decimal                     @default(0.00) @db.Decimal(15, 2)
+  InvoiceCurrency      String?                     @db.VarChar(10)
+  InvoiceSentDate      DateTime?                   @db.Date
+  InvoiceDueDate       DateTime?                   @db.Date
+  InvoicePaidDate      DateTime?                   @db.Date
+  InvoicePaid          Boolean                     @default(false)
+  BillToClientID       BigInt?                     @db.UnsignedBigInt
+  BillToWorkerID       BigInt?                     @db.UnsignedBigInt
+  created_at           DateTime                    @default(now()) @db.DateTime(0)
+  updated_at           DateTime                    @default(now()) @db.DateTime(0)
+  deleted_at           DateTime?                   @db.DateTime(0)
+  invoiceitemstable    invoiceitemstable[]
+  clienttable          clienttable?                @relation(fields: [BillToClientID], references: [ClientID], map: "fk_invoices_client")
+  workertable          workertable?                @relation(fields: [BillToWorkerID], references: [WorkerID], map: "fk_invoices_worker")
+  projectinvoicestable projectinvoicestable[]
+
+  @@index([BillToClientID], map: "idx_invoices_billtoclient")
+  @@index([BillToWorkerID], map: "idx_invoices_billtoworker")
+  @@index([deleted_at], map: "idx_invoices_deleted_at")
+  @@index([InvoiceDueDate], map: "idx_invoices_duedate")
+  @@index([InvoiceName], map: "idx_invoices_name")
+  @@index([InvoicePaidDate], map: "idx_invoices_paiddate")
+  @@index([InvoicePaid], map: "idx_invoices_paidflag")
+  @@index([InvoiceStatus], map: "idx_invoices_status")
+}
+
+model notificationstable {
+  NotificationID      BigInt                       @id @default(autoincrement()) @db.UnsignedBigInt
+  RecipientUserID     BigInt                       @db.UnsignedBigInt
+  RelatedProjectID    BigInt?                      @db.UnsignedBigInt
+  RelatedEntityType   String?                      @db.VarChar(100)
+  RelatedEntityID     BigInt?                      @db.UnsignedBigInt
+  NotificationType    String                       @db.VarChar(100)
+  NotificationTitle   String                       @db.VarChar(255)
+  NotificationMessage String                       @db.Text
+  Priority            notificationstable_Priority? @default(Normal)
+  IsRead              Boolean                      @default(false)
+  ReadAt              DateTime?                    @db.DateTime(0)
+  IsDeleted           Boolean                      @default(false)
+  created_at          DateTime                     @default(now()) @db.DateTime(0)
+  updated_at          DateTime                     @default(now()) @db.DateTime(0)
+  projecttable        projecttable?                @relation(fields: [RelatedProjectID], references: [ProjectID], map: "fk_notifications_project")
+  usertable           usertable                    @relation(fields: [RecipientUserID], references: [UserID], onDelete: Cascade, map: "fk_notifications_recipient")
+
+  @@index([created_at], map: "idx_notifications_created_at")
+  @@index([RelatedEntityType, RelatedEntityID], map: "idx_notifications_entity")
+  @@index([Priority], map: "idx_notifications_priority")
+  @@index([RelatedProjectID], map: "idx_notifications_project")
+  @@index([IsRead, IsDeleted], map: "idx_notifications_read")
+  @@index([RecipientUserID], map: "idx_notifications_recipient")
+  @@index([NotificationType], map: "idx_notifications_type")
+}
+
+model phasestable {
+  PhaseID            BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  PhaseUUID          String                  @unique(map: "uq_phases_uuid") @db.Char(36)
+  PhaseName          String                  @db.VarChar(255)
+  PhaseDescription   String?                 @db.Text
+  PhaseStatus        phasestable_PhaseStatus @default(Draft)
+  created_at         DateTime                @default(now()) @db.DateTime(0)
+  updated_at         DateTime                @default(now()) @db.DateTime(0)
+  phasestaskstable   phasestaskstable[]
+  projectphasestable projectphasestable[]
+  proofofworktable   proofofworktable[]
+
+  @@index([PhaseName], map: "idx_phases_name")
+  @@index([PhaseStatus], map: "idx_phases_status")
+}
+
+model phasestaskstable {
+  PhasesTasksID         BigInt                      @id @default(autoincrement()) @db.UnsignedBigInt
+  PhaseID               BigInt                      @db.UnsignedBigInt
+  TaskID                BigInt                      @db.UnsignedBigInt
+  WorkerID              BigInt?                     @db.UnsignedBigInt
+  TaskOrder             Int
+  TaskStatus            phasestaskstable_TaskStatus @default(Active)
+  TaskStartDate         DateTime?                   @db.Date
+  TaskDueDate           DateTime?                   @db.Date
+  TaskCompleted         Boolean                     @default(false)
+  TaskCompletionDate    DateTime?                   @db.DateTime(0)
+  TaskCompletedByUserID BigInt?                     @db.UnsignedBigInt
+  created_at            DateTime                    @default(now()) @db.DateTime(0)
+  updated_at            DateTime                    @default(now()) @db.DateTime(0)
+  usertable             usertable?                  @relation(fields: [TaskCompletedByUserID], references: [UserID], map: "fk_phasestasks_completedby")
+  phasestable           phasestable                 @relation(fields: [PhaseID], references: [PhaseID], onDelete: Cascade, map: "fk_phasestasks_phase")
+  taskstable            taskstable                  @relation(fields: [TaskID], references: [TaskID], onDelete: Cascade, map: "fk_phasestasks_task")
+  workertable           workertable?                @relation(fields: [WorkerID], references: [WorkerID], map: "fk_phasestasks_worker")
+
+  @@unique([PhaseID, TaskOrder], map: "uq_phase_task_order")
+  @@unique([PhaseID, TaskID], map: "uq_phase_task_pair")
+  @@index([TaskCompleted], map: "idx_phasestasks_completed")
+  @@index([TaskCompletedByUserID], map: "idx_phasestasks_completedby")
+  @@index([TaskDueDate], map: "idx_phasestasks_due")
+  @@index([PhaseID], map: "idx_phasestasks_phase")
+  @@index([TaskStatus], map: "idx_phasestasks_status")
+  @@index([TaskID], map: "idx_phasestasks_task")
+  @@index([WorkerID], map: "idx_phasestasks_worker")
+}
+
+model projectinvoicestable {
+  ProjectInvoiceID BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  ProjectID        BigInt        @db.UnsignedBigInt
+  InvoiceID        BigInt        @db.UnsignedBigInt
+  created_at       DateTime      @default(now()) @db.DateTime(0)
+  updated_at       DateTime      @default(now()) @db.DateTime(0)
+  invoicestable    invoicestable @relation(fields: [InvoiceID], references: [InvoiceID], onDelete: Cascade, map: "fk_projectinvoices_invoice")
+  projecttable     projecttable  @relation(fields: [ProjectID], references: [ProjectID], onDelete: Cascade, map: "fk_projectinvoices_project")
+
+  @@unique([ProjectID, InvoiceID], map: "uq_project_invoice")
+  @@index([InvoiceID], map: "idx_projectinvoices_invoice")
+  @@index([ProjectID], map: "idx_projectinvoices_project")
+}
+
+model projectphasestable {
+  ProjectPhasesID        BigInt                         @id @default(autoincrement()) @db.UnsignedBigInt
+  ProjectID              BigInt                         @db.UnsignedBigInt
+  PhaseID                BigInt                         @db.UnsignedBigInt
+  WorkerID               BigInt?                        @db.UnsignedBigInt
+  PhaseOrder             Int
+  PhaseStatus            projectphasestable_PhaseStatus @default(Active)
+  PhaseStartDate         DateTime?                      @db.Date
+  PhaseDueDate           DateTime?                      @db.Date
+  PhaseCompleted         Boolean                        @default(false)
+  PhaseCompletionDate    DateTime?                      @db.DateTime(0)
+  PhaseCompletedByUserID BigInt?                        @db.UnsignedBigInt
+  created_at             DateTime                       @default(now()) @db.DateTime(0)
+  updated_at             DateTime                       @default(now()) @db.DateTime(0)
+  usertable              usertable?                     @relation(fields: [PhaseCompletedByUserID], references: [UserID], map: "fk_projectphases_completedby")
+  phasestable            phasestable                    @relation(fields: [PhaseID], references: [PhaseID], onDelete: Cascade, map: "fk_projectphases_phase")
+  projecttable           projecttable                   @relation(fields: [ProjectID], references: [ProjectID], onDelete: Cascade, map: "fk_projectphases_project")
+  workertable            workertable?                   @relation(fields: [WorkerID], references: [WorkerID], map: "fk_projectphases_worker")
+
+  @@unique([ProjectID, PhaseOrder], map: "uq_project_phase_order")
+  @@unique([ProjectID, PhaseID], map: "uq_project_phase_pair")
+  @@index([PhaseCompleted], map: "idx_projectphases_completed")
+  @@index([PhaseCompletedByUserID], map: "idx_projectphases_completedby")
+  @@index([PhaseDueDate], map: "idx_projectphases_due")
+  @@index([PhaseID], map: "idx_projectphases_phase")
+  @@index([ProjectID], map: "idx_projectphases_project")
+  @@index([PhaseStatus], map: "idx_projectphases_status")
+  @@index([WorkerID], map: "idx_projectphases_worker")
+}
+
+model projecttable {
+  ProjectID                                                      BigInt                     @id @default(autoincrement()) @db.UnsignedBigInt
+  ProjectUUID                                                    String                     @unique(map: "uq_projects_uuid") @db.Char(36)
+  ProjectName                                                    String                     @db.VarChar(255)
+  ProjectStatus                                                  projecttable_ProjectStatus @default(Draft)
+  ProjectStartDate                                               DateTime?                  @db.Date
+  ProjectExpectedEndDate                                         DateTime?                  @db.Date
+  ProjectEndDate                                                 DateTime?                  @db.Date
+  ProjectBudgetAmount                                            Decimal?                   @db.Decimal(15, 2)
+  ProjectCurrency                                                String?                    @db.VarChar(10)
+  ProjectSizeSQM                                                 Decimal?                   @db.Decimal(12, 2)
+  ProjectRooms                                                   Int?
+  ProjectAddress                                                 String?                    @db.Text
+  ProjectCoordinates                                             String?                    @db.VarChar(255)
+  ProjectImage                                                   String?                    @db.VarChar(500)
+  ProjectType                                                    String?                    @db.VarChar(100)
+  AssignedOwnerUserID                                            BigInt?                    @db.UnsignedBigInt
+  AssignedProjectManagerUserID                                   BigInt?                    @db.UnsignedBigInt
+  Notes                                                          String?                    @db.Text
+  created_at                                                     DateTime                   @default(now()) @db.DateTime(0)
+  updated_at                                                     DateTime                   @default(now()) @db.DateTime(0)
+  deleted_at                                                     DateTime?                  @db.DateTime(0)
+  clientprojecttable                                             clientprojecttable[]
+  contactmessagestable                                           contactmessagestable[]
+  notificationstable                                             notificationstable[]
+  projectinvoicestable                                           projectinvoicestable[]
+  projectphasestable                                             projectphasestable[]
+  usertable_projecttable_AssignedOwnerUserIDTousertable          usertable?                 @relation("projecttable_AssignedOwnerUserIDTousertable", fields: [AssignedOwnerUserID], references: [UserID], map: "fk_projects_owner")
+  usertable_projecttable_AssignedProjectManagerUserIDTousertable usertable?                 @relation("projecttable_AssignedProjectManagerUserIDTousertable", fields: [AssignedProjectManagerUserID], references: [UserID], map: "fk_projects_pm")
+  projectuserstable                                              projectuserstable[]
+  proofofworktable                                               proofofworktable[]
+  useractivitytable                                              useractivitytable[]
+
+  @@index([deleted_at], map: "idx_projects_deleted_at")
+  @@index([ProjectEndDate], map: "idx_projects_enddate")
+  @@index([ProjectExpectedEndDate], map: "idx_projects_expected_end")
+  @@index([ProjectName], map: "idx_projects_name")
+  @@index([AssignedOwnerUserID], map: "idx_projects_owner")
+  @@index([AssignedProjectManagerUserID], map: "idx_projects_pm")
+  @@index([ProjectStartDate], map: "idx_projects_startdate")
+  @@index([ProjectStatus], map: "idx_projects_status")
+  @@index([ProjectType], map: "idx_projects_type")
+}
+
+model projectuserstable {
+  ProjectUserID   BigInt                            @id @default(autoincrement()) @db.UnsignedBigInt
+  ProjectID       BigInt                            @db.UnsignedBigInt
+  UserID          BigInt                            @db.UnsignedBigInt
+  ProjectRoleType projectuserstable_ProjectRoleType
+  AssignedFrom    DateTime?                         @db.DateTime(0)
+  AssignedTo      DateTime?                         @db.DateTime(0)
+  created_at      DateTime                          @default(now()) @db.DateTime(0)
+  updated_at      DateTime                          @default(now()) @db.DateTime(0)
+  projecttable    projecttable                      @relation(fields: [ProjectID], references: [ProjectID], onDelete: Cascade, map: "fk_projectusers_project")
+  usertable       usertable                         @relation(fields: [UserID], references: [UserID], onDelete: Cascade, map: "fk_projectusers_user")
+
+  @@index([AssignedFrom, AssignedTo], map: "idx_projectusers_active_window")
+  @@index([ProjectID], map: "idx_projectusers_project")
+  @@index([ProjectRoleType], map: "idx_projectusers_role")
+  @@index([UserID], map: "idx_projectusers_user")
+}
+
+model proofofworktable {
+  ProofOfWorkID                                          BigInt                          @id @default(autoincrement()) @db.UnsignedBigInt
+  WorkerID                                               BigInt                          @db.UnsignedBigInt
+  ProjectID                                              BigInt                          @db.UnsignedBigInt
+  PhaseID                                                BigInt?                         @db.UnsignedBigInt
+  TaskID                                                 BigInt?                         @db.UnsignedBigInt
+  StepID                                                 BigInt?                         @db.UnsignedBigInt
+  AttachmentID                                           BigInt                          @db.UnsignedBigInt
+  Description                                            String?                         @db.Text
+  ApprovalStatus                                         proofofworktable_ApprovalStatus @default(Pending)
+  UploadedByUserID                                       BigInt                          @db.UnsignedBigInt
+  ApprovedByUserID                                       BigInt?                         @db.UnsignedBigInt
+  ApprovedAt                                             DateTime?                       @db.DateTime(0)
+  created_at                                             DateTime                        @default(now()) @db.DateTime(0)
+  updated_at                                             DateTime                        @default(now()) @db.DateTime(0)
+  usertable_proofofworktable_ApprovedByUserIDTousertable usertable?                      @relation("proofofworktable_ApprovedByUserIDTousertable", fields: [ApprovedByUserID], references: [UserID], map: "fk_proofofwork_approvedby")
+  attachmentstable                                       attachmentstable                @relation(fields: [AttachmentID], references: [AttachmentID], map: "fk_proofofwork_attachment")
+  phasestable                                            phasestable?                    @relation(fields: [PhaseID], references: [PhaseID], map: "fk_proofofwork_phase")
+  projecttable                                           projecttable                    @relation(fields: [ProjectID], references: [ProjectID], onDelete: Cascade, map: "fk_proofofwork_project")
+  stepstable                                             stepstable?                     @relation(fields: [StepID], references: [StepID], map: "fk_proofofwork_step")
+  taskstable                                             taskstable?                     @relation(fields: [TaskID], references: [TaskID], map: "fk_proofofwork_task")
+  usertable_proofofworktable_UploadedByUserIDTousertable usertable                       @relation("proofofworktable_UploadedByUserIDTousertable", fields: [UploadedByUserID], references: [UserID], map: "fk_proofofwork_uploadedby")
+  workertable                                            workertable                     @relation(fields: [WorkerID], references: [WorkerID], onDelete: Cascade, map: "fk_proofofwork_worker")
+
+  @@index([ApprovedByUserID], map: "idx_proofofwork_approvedby")
+  @@index([AttachmentID], map: "idx_proofofwork_attachment")
+  @@index([created_at], map: "idx_proofofwork_created")
+  @@index([PhaseID], map: "idx_proofofwork_phase")
+  @@index([ProjectID], map: "idx_proofofwork_project")
+  @@index([ApprovalStatus], map: "idx_proofofwork_status")
+  @@index([StepID], map: "idx_proofofwork_step")
+  @@index([TaskID], map: "idx_proofofwork_task")
+  @@index([UploadedByUserID], map: "idx_proofofwork_uploadedby")
+  @@index([WorkerID], map: "idx_proofofwork_worker")
+}
+
+model stepstable {
+  StepID             BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  StepUUID           String                @unique(map: "uq_steps_uuid") @db.Char(36)
+  StepName           String                @db.VarChar(255)
+  StepDescription    String?               @db.Text
+  StepEstimatedHours Decimal?              @db.Decimal(10, 2)
+  StepStatus         stepstable_StepStatus @default(Draft)
+  created_at         DateTime              @default(now()) @db.DateTime(0)
+  updated_at         DateTime              @default(now()) @db.DateTime(0)
+  proofofworktable   proofofworktable[]
+  taskstepstable     taskstepstable[]
+
+  @@index([StepName], map: "idx_steps_name")
+  @@index([StepStatus], map: "idx_steps_status")
+}
+
+model taskstable {
+  TaskID           BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  TaskUUID         String                @unique(map: "uq_tasks_uuid") @db.Char(36)
+  TaskName         String                @db.VarChar(255)
+  TaskDescription  String?               @db.Text
+  TaskStatus       taskstable_TaskStatus @default(Draft)
+  created_at       DateTime              @default(now()) @db.DateTime(0)
+  updated_at       DateTime              @default(now()) @db.DateTime(0)
+  phasestaskstable phasestaskstable[]
+  proofofworktable proofofworktable[]
+  taskstepstable   taskstepstable[]
+
+  @@index([TaskName], map: "idx_tasks_name")
+  @@index([TaskStatus], map: "idx_tasks_status")
+}
+
+model taskstepstable {
+  TaskStepsID           BigInt                    @id @default(autoincrement()) @db.UnsignedBigInt
+  TaskID                BigInt                    @db.UnsignedBigInt
+  StepID                BigInt                    @db.UnsignedBigInt
+  WorkerID              BigInt?                   @db.UnsignedBigInt
+  StepOrder             Int
+  StepStatus            taskstepstable_StepStatus @default(Active)
+  StepStartDate         DateTime?                 @db.Date
+  StepDueDate           DateTime?                 @db.Date
+  StepCompleted         Boolean                   @default(false)
+  StepCompletionDate    DateTime?                 @db.DateTime(0)
+  StepCompletedByUserID BigInt?                   @db.UnsignedBigInt
+  created_at            DateTime                  @default(now()) @db.DateTime(0)
+  updated_at            DateTime                  @default(now()) @db.DateTime(0)
+  usertable             usertable?                @relation(fields: [StepCompletedByUserID], references: [UserID], map: "fk_tasksteps_completedby")
+  stepstable            stepstable                @relation(fields: [StepID], references: [StepID], onDelete: Cascade, map: "fk_tasksteps_step")
+  taskstable            taskstable                @relation(fields: [TaskID], references: [TaskID], onDelete: Cascade, map: "fk_tasksteps_task")
+  workertable           workertable?              @relation(fields: [WorkerID], references: [WorkerID], map: "fk_tasksteps_worker")
+
+  @@unique([TaskID, StepOrder], map: "uq_task_step_order")
+  @@unique([TaskID, StepID], map: "uq_task_step_pair")
+  @@index([StepCompleted], map: "idx_tasksteps_completed")
+  @@index([StepCompletedByUserID], map: "idx_tasksteps_completedby")
+  @@index([StepDueDate], map: "idx_tasksteps_due")
+  @@index([StepStatus], map: "idx_tasksteps_status")
+  @@index([StepID], map: "idx_tasksteps_step")
+  @@index([TaskID], map: "idx_tasksteps_task")
+  @@index([WorkerID], map: "idx_tasksteps_worker")
+}
+
+model useractivitytable {
+  UserActivityID   BigInt                   @id @default(autoincrement()) @db.UnsignedBigInt
+  UserID           BigInt                   @db.UnsignedBigInt
+  ActionType       String                   @db.VarChar(100)
+  EntityType       String                   @db.VarChar(100)
+  EntityID         BigInt?                  @db.UnsignedBigInt
+  RelatedProjectID BigInt?                  @db.UnsignedBigInt
+  Timestamp        DateTime                 @default(now()) @db.DateTime(0)
+  Changes          String?                  @db.Text
+  IPAddress        String?                  @db.VarChar(100)
+  Status           useractivitytable_Status @default(Success)
+  UserAgent        String?                  @db.VarChar(500)
+  projecttable     projecttable?            @relation(fields: [RelatedProjectID], references: [ProjectID], map: "fk_useractivity_project")
+  usertable        usertable                @relation(fields: [UserID], references: [UserID], onDelete: Cascade, map: "fk_useractivity_user")
+
+  @@index([ActionType], map: "idx_useractivity_action")
+  @@index([EntityType, EntityID], map: "idx_useractivity_entity")
+  @@index([RelatedProjectID], map: "idx_useractivity_project")
+  @@index([Status], map: "idx_useractivity_status")
+  @@index([Timestamp], map: "idx_useractivity_timestamp")
+  @@index([UserID], map: "idx_useractivity_user")
+}
+
+model userlogintable {
+  UserLoginID   BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  UserID        BigInt    @db.UnsignedBigInt
+  LoginTime     DateTime  @default(now()) @db.DateTime(0)
+  IPAddress     String    @db.VarChar(100)
+  Success       Boolean
+  UserAgent     String?   @db.VarChar(500)
+  SessionToken  String?   @db.VarChar(255)
+  LogoutTime    DateTime? @db.DateTime(0)
+  DeviceInfo    String?   @db.Text
+  FailureReason String?   @db.VarChar(255)
+  created_at    DateTime  @default(now()) @db.DateTime(0)
+  usertable     usertable @relation(fields: [UserID], references: [UserID], onDelete: Cascade, map: "fk_userlogin_user")
+
+  @@index([IPAddress], map: "idx_userlogin_ip")
+  @@index([LoginTime], map: "idx_userlogin_logintime")
+  @@index([Success], map: "idx_userlogin_success")
+  @@index([UserID], map: "idx_userlogin_user")
+}
+
+model userrolestable {
+  UserRoleID   BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  UserRoleName String      @unique(map: "uq_userroles_name") @db.VarChar(100)
+  created_at   DateTime    @default(now()) @db.DateTime(0)
+  updated_at   DateTime    @default(now()) @db.DateTime(0)
+  usertable    usertable[]
+}
+
+model usertable {
+  UserID                                                               BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  UserRoleID                                                           BigInt                  @db.UnsignedBigInt
+  Username                                                             String                  @unique(map: "uq_users_username") @db.VarChar(100)
+  PasswordHash                                                         String                  @db.VarChar(255)
+  Email                                                                String                  @unique(map: "uq_users_email") @db.VarChar(255)
+  EmailVerified                                                        Boolean                 @default(false)
+  EmailVerificationToken                                               String?                 @db.VarChar(255)
+  EmailVerificationTokenExpiry                                         DateTime?               @db.DateTime(0)
+  PasswordResetToken                                                   String?                 @db.VarChar(255)
+  PasswordResetTokenExpiry                                             DateTime?               @db.DateTime(0)
+  FailedLoginAttempts                                                  Int                     @default(0)
+  LockedUntil                                                          DateTime?               @db.DateTime(0)
+  LastLoginAt                                                          DateTime?               @db.DateTime(0)
+  LastPasswordChangeAt                                                 DateTime?               @db.DateTime(0)
+  TwoFactorEnabled                                                     Boolean                 @default(false)
+  TwoFactorSecret                                                      String?                 @db.VarChar(255)
+  AccountStatus                                                        usertable_AccountStatus @default(Pending_Verification)
+  created_at                                                           DateTime                @default(now()) @db.DateTime(0)
+  updated_at                                                           DateTime                @default(now()) @db.DateTime(0)
+  deleted_at                                                           DateTime?               @db.DateTime(0)
+  attachmentstable                                                     attachmentstable[]
+  clienttable                                                          clienttable?
+  contactmessagestable_contactmessagestable_RecipientUserIDTousertable contactmessagestable[]  @relation("contactmessagestable_RecipientUserIDTousertable")
+  contactmessagestable_contactmessagestable_SenderUserIDTousertable    contactmessagestable[]  @relation("contactmessagestable_SenderUserIDTousertable")
+  notificationstable                                                   notificationstable[]
+  phasestaskstable                                                     phasestaskstable[]
+  projectphasestable                                                   projectphasestable[]
+  projecttable_projecttable_AssignedOwnerUserIDTousertable             projecttable[]          @relation("projecttable_AssignedOwnerUserIDTousertable")
+  projecttable_projecttable_AssignedProjectManagerUserIDTousertable    projecttable[]          @relation("projecttable_AssignedProjectManagerUserIDTousertable")
+  projectuserstable                                                    projectuserstable[]
+  proofofworktable_proofofworktable_ApprovedByUserIDTousertable        proofofworktable[]      @relation("proofofworktable_ApprovedByUserIDTousertable")
+  proofofworktable_proofofworktable_UploadedByUserIDTousertable        proofofworktable[]      @relation("proofofworktable_UploadedByUserIDTousertable")
+  taskstepstable                                                       taskstepstable[]
+  useractivitytable                                                    useractivitytable[]
+  userlogintable                                                       userlogintable[]
+  userrolestable                                                       userrolestable          @relation(fields: [UserRoleID], references: [UserRoleID], map: "fk_users_role")
+  workertable                                                          workertable?
+
+  @@index([deleted_at], map: "idx_users_deleted_at")
+  @@index([LastLoginAt], map: "idx_users_lastlogin")
+  @@index([UserRoleID], map: "idx_users_role")
+  @@index([AccountStatus], map: "idx_users_status")
+}
+
+model workertable {
+  WorkerID           BigInt                          @id @default(autoincrement()) @db.UnsignedBigInt
+  UserID             BigInt?                         @unique(map: "uq_workers_userid") @db.UnsignedBigInt
+  WorkerName         String                          @db.VarChar(150)
+  WorkerSurname      String?                         @db.VarChar(150)
+  WorkerEmail        String                          @db.VarChar(255)
+  WorkerTelephone    String?                         @db.VarChar(50)
+  WorkerMobile       String?                         @db.VarChar(50)
+  WorkerAddress      String?                         @db.Text
+  WorkerWebsite      String?                         @db.VarChar(255)
+  WorkerStatus       workertable_WorkerStatus        @default(Active)
+  WorkerIndustry     String?                         @db.VarChar(150)
+  AvailabilityStatus workertable_AvailabilityStatus?
+  Notes              String?                         @db.Text
+  created_at         DateTime                        @default(now()) @db.DateTime(0)
+  updated_at         DateTime                        @default(now()) @db.DateTime(0)
+  deleted_at         DateTime?                       @db.DateTime(0)
+  invoicestable      invoicestable[]
+  phasestaskstable   phasestaskstable[]
+  projectphasestable projectphasestable[]
+  proofofworktable   proofofworktable[]
+  taskstepstable     taskstepstable[]
+  usertable          usertable?                      @relation(fields: [UserID], references: [UserID], map: "fk_workers_user")
+
+  @@index([AvailabilityStatus], map: "idx_workers_availability")
+  @@index([deleted_at], map: "idx_workers_deleted_at")
+  @@index([WorkerEmail], map: "idx_workers_email")
+  @@index([WorkerIndustry], map: "idx_workers_industry")
+  @@index([WorkerName, WorkerSurname], map: "idx_workers_name")
+  @@index([WorkerStatus], map: "idx_workers_status")
+}
+
+enum attachmentstable_EntityType {
+  Project
+  Client
+  Worker
+  Invoice
+  Message
+  ProofOfWork
+}
+
+enum helparticlestable_AudienceRole {
+  Client
+  Worker
+  Project_Manager @map("Project Manager")
+  Owner
+  Admin
+}
+
+enum projecttable_ProjectStatus {
+  Draft
+  Active
+  On_Hold   @map("On Hold")
+  Completed
+  Cancelled
+  Archived
+}
+
+enum projectuserstable_ProjectRoleType {
+  Owner
+  Project_Manager @map("Project Manager")
+  Coordinator
+  Viewer
+}
+
+enum invoicestable_InvoiceStatus {
+  Draft
+  Sent
+  Overdue
+  Paid
+  Cancelled
+}
+
+enum phasestable_PhaseStatus {
+  Draft
+  Active
+  Completed
+  Cancelled
+  Archived
+}
+
+enum taskstable_TaskStatus {
+  Draft
+  Active
+  Completed
+  Cancelled
+  Archived
+}
+
+enum phasestaskstable_TaskStatus {
+  Active
+  Completed
+  Cancelled
+}
+
+enum projectphasestable_PhaseStatus {
+  Active
+  Completed
+  Cancelled
+}
+
+enum stepstable_StepStatus {
+  Draft
+  Active
+  Completed
+  Cancelled
+  Archived
+}
+
+enum taskstepstable_StepStatus {
+  Active
+  Completed
+  Cancelled
+}
+
+enum notificationstable_Priority {
+  Low
+  Normal
+  High
+  Urgent
+}
+
+enum proofofworktable_ApprovalStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum useractivitytable_Status {
+  Success
+  Failure
+}
+
+enum workertable_WorkerStatus {
+  Active
+  Inactive
+  Archived
+  Unavailable
+}
+
+enum clienttable_ClientStatus {
+  Active
+  Inactive
+  Archived
+  Blocked
+}
+
+enum workertable_AvailabilityStatus {
+  Available
+  Busy
+  Offsite
+  Leave
+}
+
+enum usertable_AccountStatus {
+  Pending_Verification @map("Pending Verification")
+  Active
+  Locked
+  Disabled
 }

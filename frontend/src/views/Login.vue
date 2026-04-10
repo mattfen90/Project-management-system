@@ -27,6 +27,9 @@
         <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
           {{ isSubmitting ? 'Logging in...' : 'Login' }}
         </button>
+        <router-link to="/forgot-password" class="forgot-link">
+          Forgot Password?
+        </router-link>
         <div v-if="error" class="alert alert-danger mt-2">{{ error }}</div>
       </Form>
     </div>
@@ -60,6 +63,19 @@ const onSubmit = async (values) => {
 </script>
 
 <style scoped>
+
+.forgot-link {
+  display: block;
+  margin-top: 1rem;
+  text-align: center;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+}
 .login-container {
   min-height: 100vh;
   display: flex;
