@@ -12,7 +12,7 @@ export async function getLinkableUsers(roleName) {
 
   return prisma.usertable.findMany({
     where: {
-      deletedat: null,
+      deleted_at: null,
       userrolestable: {
         UserRoleName: roleName,
       },
@@ -42,7 +42,7 @@ export async function linkClientToUser(clientId, userId) {
   const client = await prisma.clienttable.findFirst({
     where: {
       ClientID: Number(clientId),
-      deletedat: null,
+      deleted_at: null,
     },
     include: {
       usertable: true,
@@ -54,7 +54,7 @@ export async function linkClientToUser(clientId, userId) {
   const user = await prisma.usertable.findFirst({
     where: {
       UserID: Number(userId),
-      deletedat: null,
+      deleted_at: null,
       userrolestable: {
         UserRoleName: 'Client',
       },
@@ -106,7 +106,7 @@ export async function unlinkClientFromUser(clientId) {
   const client = await prisma.clienttable.findFirst({
     where: {
       ClientID: Number(clientId),
-      deletedat: null,
+      deleted_at: null,
     },
   });
 
@@ -132,7 +132,7 @@ export async function linkWorkerToUser(workerId, userId) {
   const worker = await prisma.workertable.findFirst({
     where: {
       WorkerID: Number(workerId),
-      deletedat: null,
+      deleted_at: null,
     },
     include: {
       usertable: true,
@@ -144,7 +144,7 @@ export async function linkWorkerToUser(workerId, userId) {
   const user = await prisma.usertable.findFirst({
     where: {
       UserID: Number(userId),
-      deletedat: null,
+      deleted_at: null,
       userrolestable: {
         UserRoleName: 'Worker',
       },
@@ -196,7 +196,7 @@ export async function unlinkWorkerFromUser(workerId) {
   const worker = await prisma.workertable.findFirst({
     where: {
       WorkerID: Number(workerId),
-      deletedat: null,
+      deleted_at: null,
     },
   });
 
