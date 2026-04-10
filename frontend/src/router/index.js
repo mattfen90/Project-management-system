@@ -5,15 +5,17 @@ import Dashboard from '../views/Dashboard.vue';
 import ForgotPassword from '../views/ForgotPassword.vue';
 import ResetPassword from '../views/ResetPassword.vue';
 import Unauthorized from '../views/Unauthorized.vue';
+import VerifyEmail from '../views/VerifyEmail.vue';
 
 // Public routes — accessible without a token
-const PUBLIC_ROUTES = ['login', 'forgot-password', 'reset-password', 'unauthorized'];
+const PUBLIC_ROUTES = ['login', 'forgot-password', 'reset-password', 'unauthorized', 'verify-email'];
 
 const routes = [
   // Auth
   { path: '/login',           name: 'login',           component: Login },
   { path: '/forgot-password', name: 'forgot-password', component: ForgotPassword },
   { path: '/reset-password',  name: 'reset-password',  component: ResetPassword },
+  { path: '/verify-email',    name: 'verify-email',    component: VerifyEmail },
   { path: '/unauthorized',    name: 'unauthorized',    component: Unauthorized },
 
   // Protected — all authenticated roles
